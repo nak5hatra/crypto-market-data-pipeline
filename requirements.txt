@@ -1,0 +1,8 @@
+pandas
+numpy
+polars
+requests
+dotenv
+sqlalchemy
+psycopg2-binary
+pyarrow
