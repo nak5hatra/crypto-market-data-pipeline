@@ -4,6 +4,13 @@ from config import Config
 
 
 def load_data_to_database(df: pl.DataFrame, table_name: str):
+    """
+    Load a Polars DataFrame into a PostgreSQL table.
+
+    Args:
+        df (pl.DataFrame): Transformed data to be inserted into the database.
+        table_name (str): Name of the target table in PostgreSQL.
+    """
     
     try:
         df.write_database(table_name=table_name,connection=Config.DB_URL, if_table_exists="append", engine='sqlalchemy') # type: ignore
