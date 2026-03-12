@@ -1,6 +1,8 @@
 import sys
 import os
-sys.path.append(os.path.abspath(".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "."))
+sys.path.append(PROJECT_ROOT)
+
 import requests
 import json
 from config import Config
@@ -9,6 +11,7 @@ import time
 from pathlib import Path
 
 Path("../data/extraction_dumps").mkdir(parents=True, exist_ok=True)
+DUMP_PATH = '../data/extraction_dumps/market_data.json'
 
 headers = {"x-cg-demo-api-key": Config.COINGECKO_API_KEY}
 
@@ -43,7 +46,7 @@ def fetch_coin_data() -> list[dict]: # type: ignore
         print(f"An Error Occurred: {e}")
         sys.exit(1)
 
-def fetch_market_data(coin_data:dict) -> list[dict]: # type: ignore
+def fetch_market_data(coin_data:dict) -> str:  # type: ignore
     """
     fetch all coin market data available on COINGECKO platform using the coin ids from `coin data` dict.
 
@@ -53,7 +56,7 @@ def fetch_market_data(coin_data:dict) -> list[dict]: # type: ignore
     Returns:
         dict: returns data of all markets in COINGECKO
     """
-    list_of_ids = [coin["id"] for coin in coin_data] # type: ignore ## Only 1000 coin details
+    list_of_ids = [coin["id"] for coin in coin_data][:1000] # type: ignore ## Only 1000 coin details
     
     market_data = []
     try:
@@ -68,9 +71,9 @@ def fetch_market_data(coin_data:dict) -> list[dict]: # type: ignore
             market_data.extend(response.json()) # type: ignore
             
         # Dump market_data in market_data.json
-        with open("../data/extraction_dumps/market_data.json", "w")  as file:
+        with open(DUMP_PATH, "w")  as file:
             json.dump(market_data, file, indent=4)
-        return market_data # type: ignore
+        return DUMP_PATH # type: ignore
     
     except requests.exceptions.HTTPError as e:
         print(f"HTTP error occurred: {e}")
