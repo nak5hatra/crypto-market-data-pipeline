@@ -1,28 +1,10 @@
 import polars as pl
 from pathlib import Path
-import sys
-import json
+
 
 Path("../data/transformed_dump").mkdir(parents=True, exist_ok=True)
-
-def load_data(file_path:str | Path) -> pl.DataFrame:
-    
-    """
-    Function load_data() takes json data dump from data extraction and return polars DataFrame.
-    """
-    path = Path(file_path)
-    
-    try:
-        df = pl.read_json(path)
-        return df
-    except FileNotFoundError:
-        print(f"File {path} not found.")
-        sys.exit(1)
-    except json.JSONDecodeError:
-        print("Error decoding JSON from the file")
-        sys.exit(1)
         
-def transform_data(df: pl.DataFrame) -> pl.DataFrame:
+def transform_data(file_path: str) -> str:
     """
         Transforms raw crypto market data:
         - drops unnecessary columns
@@ -30,6 +12,7 @@ def transform_data(df: pl.DataFrame) -> pl.DataFrame:
         - converts timestamps
         - derives analytics metrics
     """
+    df = pl.read_json(file_path)
     df = df.drop('image', 'roi', strict=True)
     df = df.fill_null(0)
     
@@ -57,4 +40,4 @@ def transform_data(df: pl.DataFrame) -> pl.DataFrame:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(output_path)
     
-    return df
+    return str(output_path)
