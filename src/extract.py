@@ -15,7 +15,7 @@ DUMP_PATH = '../data/extraction_dumps/market_data.json'
 
 headers = {"x-cg-demo-api-key": Config.COINGECKO_API_KEY}
 
-def fetch_coin_data() -> list[dict]: # type: ignore
+def fetch_coin_data(): # type: ignore
     
     """
     fetch list of coins available on COINGECKO platform.
@@ -46,7 +46,7 @@ def fetch_coin_data() -> list[dict]: # type: ignore
         print(f"An Error Occurred: {e}")
         sys.exit(1)
 
-def fetch_market_data(coin_data:dict) -> str:  # type: ignore
+def fetch_market_data(coin_data):  # type: ignore
     """
     fetch all coin market data available on COINGECKO platform using the coin ids from `coin data` dict.
 
@@ -56,11 +56,11 @@ def fetch_market_data(coin_data:dict) -> str:  # type: ignore
     Returns:
         dict: returns data of all markets in COINGECKO
     """
-    list_of_ids = [coin["id"] for coin in coin_data][:1000] # type: ignore ## Only 1000 coin details
+    list_of_ids = [coin["id"] for coin in coin_data] # type: ignore ## Only 1000 coin details
     
     market_data = []
     try:
-        for batch in chunk_list(list_of_ids, 50): # type: ignore
+        for batch in chunk_list(list_of_ids, 100): # type: ignore
             coin_ids_str = ",".join(batch) # type: ignore
             url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={coin_ids_str}&price_change_percentage=1h"
             response = requests.get(url, headers=headers, timeout=10)
