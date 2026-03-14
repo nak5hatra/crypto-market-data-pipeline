@@ -5,3 +5,5 @@ dotenv
 sqlalchemy
 psycopg2-binary
 pyarrow
+apache-airflow
+asyncpg

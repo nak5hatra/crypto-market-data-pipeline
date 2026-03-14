@@ -26,8 +26,7 @@ with DAG (
     default_args= default_args,
     start_date= pendulum.datetime(2026, 3, 11,tz='UTC'),
     description='A Crypto ETL Pipeline Using Airflow',
-    # schedule='@hourly',
-    schedule='*/5 * * * *',
+    schedule='@hourly',
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=30),
     doc_md="""
