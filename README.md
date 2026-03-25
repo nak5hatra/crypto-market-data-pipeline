@@ -7,25 +7,7 @@ This project demonstrates real-world data engineering practices including modula
 ---
 
 # Architecture
-
-```
-        CoinGecko API
-              │
-              ▼
-        Raw Layer (JSON)
-              │
-              ▼
-     Staging Layer (Parquet)
-              │
-              ▼
- PostgreSQL Data Warehouse
- (Fact & Dimension Tables)
-              │
-              ▼
-     Airflow Scheduler
-```
-
----
+![alt text](https://github.com/nak5hatra/crypto-market-data-pipeline/blob/main/images/architecture.png?raw=true)
 
 # Tech Stack
 
