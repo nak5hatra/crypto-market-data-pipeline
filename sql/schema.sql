@@ -1,39 +1,21 @@
-CREATE TABLE crypto_market (
-    coin_id TEXT,
+CREATE TABLE dim_coin (
+    coin_id TEXT PRIMARY KEY,
     coin_symbol TEXT,
-    coin_name TEXT,
-
-    price_usd DOUBLE PRECISION,
-    market_cap DOUBLE PRECISION,
-    market_cap_rank INTEGER,
-    fully_diluted_valuation DOUBLE PRECISION,
-
-    total_volume DOUBLE PRECISION,
-    high_24h DOUBLE PRECISION,
-    low_24h DOUBLE PRECISION,
-
-    price_change_24h DOUBLE PRECISION,
-    price_change_pct_24h DOUBLE PRECISION,
-
-    market_cap_change_24h DOUBLE PRECISION,
-    market_cap_change_percentage_24h DOUBLE PRECISION,
-
-    circulating_supply DOUBLE PRECISION,
-    total_supply DOUBLE PRECISION,
-    max_supply DOUBLE PRECISION,
-
-    ath DOUBLE PRECISION,
-    ath_change_percentage DOUBLE PRECISION,
-    ath_date TIMESTAMP,
-
-    atl DOUBLE PRECISION,
-    atl_change_percentage DOUBLE PRECISION,
-    atl_date TIMESTAMP,
-
-    last_updated TIMESTAMP,
-
-    price_change_pct_1h DOUBLE PRECISION,
-
-    volume_marketcap_ratio DOUBLE PRECISION,
-    distance_from_ath_pct DOUBLE PRECISION
+    coin_name TEXT
 );
+
+CREATE TABLE fact_crypto_price (
+    id SERIAL PRIMARY KEY,
+    coin_id TEXT NOT NULL REFERENCES dim_coin(coin_id),
+    price_usd NUMERIC NOT NULL,
+    market_cap NUMERIC,
+    total_volume NUMERIC,
+    volume_marketcap_ratio NUMERIC,
+    distance_from_ath_pct NUMERIC,
+    last_updated TIMESTAMP NOT NULL,
+    
+    UNIQUE (coin_id, last_updated)
+);
+
+CREATE INDEX idx_fact_coin_time
+ON fact_crypto_price (coin_id, last_updated);

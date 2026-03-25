@@ -1,43 +1,64 @@
 # Crypto Market Data Pipeline
 
-A production-style **Data Engineering pipeline** that extracts cryptocurrency market data from the CoinGecko API, transforms it using Polars, and loads it into PostgreSQL. The pipeline is orchestrated using Airflow and runs inside a fully containerized Docker environment.
+A production-style **Data Engineering pipeline** that ingests cryptocurrency market data from the CoinGecko API, processes it through a multi-layer ETL architecture, and loads it into a PostgreSQL data warehouse. The pipeline is orchestrated using Apache Airflow and runs in a fully containerized Docker environment.
 
-This project demonstrates how modern data pipelines are built using modular ETL design, orchestration, and containerization.
+This project demonstrates real-world data engineering practices including modular pipeline design, data modeling, idempotent processing, and workflow orchestration.
 
 ---
 
 # Architecture
 
 ```
-            CoinGecko API
-                  │
-                  ▼
-            Data Extraction
-               (Python)
-                  │
-                  ▼
-            Data Transformation
-                (Polars)
-                  │
-                  ▼
-              PostgreSQL
-              Data Storage
-                  │
-                  ▼
-            Airflow Scheduler
-        (Pipeline Orchestration)
+        CoinGecko API
+              │
+              ▼
+        Raw Layer (JSON)
+              │
+              ▼
+     Staging Layer (Parquet)
+              │
+              ▼
+ PostgreSQL Data Warehouse
+ (Fact & Dimension Tables)
+              │
+              ▼
+     Airflow Scheduler
 ```
 
 ---
 
 # Tech Stack
 
-1. Python
-2. Polars
-3. PostgreSQL
-4. Apache Airflow
-5. Docker
-6. CoinGecko API
+* Python
+* Polars
+* PostgreSQL
+* Apache Airflow
+* Docker
+* CoinGecko API
+
+---
+
+# Data Modeling
+
+The pipeline follows a **star schema design**:
+
+### Dimension Table: `dim_coin`
+
+* coin_id (Primary Key)
+* coin_symbol
+* coin_name
+
+### Fact Table: `fact_crypto_price`
+
+* coin_id (Foreign Key)
+* price_usd
+* market_cap
+* total_volume
+* volume_marketcap_ratio
+* distance_from_ath_pct
+* last_updated
+
+This design improves query performance and supports analytical workloads.
 
 ---
 
@@ -51,11 +72,8 @@ crypto-market-data-pipeline
 │       └── crypto_pipeline_dag.py
 │
 ├── data/
-│   ├── extraction_dumps/
-│   └── transformed_dump/
-│
-├── sql/
-│   └── schema.sql
+│   ├── raw/
+│   └── staging/
 │
 ├── src/
 │   ├── config.py
@@ -71,49 +89,38 @@ crypto-market-data-pipeline
 └── README.md
 ```
 
-### Folder Explanation
-
-**Airflow/**:
-Contains DAG definitions used to orchestrate and schedule the data pipeline.
-
-**data/**:
-Stores intermediate pipeline outputs such as raw extracted data and transformed datasets.
-
-**sql/**:
-Contains SQL schema definitions used to create database tables.
-
-**src/**:
-Core pipeline logic including extraction, transformation, and loading modules.
-
-**Dockerfile & docker-compose.yml**
-Used to containerize and run the pipeline and Airflow environment.
-
 ---
 
 # Pipeline Workflow
 
-1. Fetch list of available cryptocurrencies from the CoinGecko API.
-2. Retrieve market data.
-3. Transform raw API data using Polars.
-4. Store cleaned data into PostgreSQL tables.
-5. Airflow schedules and orchestrates the pipeline execution.
+1. Fetch list of cryptocurrencies from CoinGecko API
+2. Extract market data in batches with retry logic
+3. Store raw data as JSON
+4. Transform data using Polars into structured format
+5. Generate fact and dimension tables
+6. Store transformed data as Parquet
+7. Load data into PostgreSQL with idempotent logic
+8. Orchestrate pipeline execution using Airflow
 
 ---
 
 # Features
 
-1. Modular ETL pipeline design
-2. API-based data ingestion
-3. Data transformation using Polars
-4. PostgreSQL data storage
-5. Airflow DAG orchestration
-6. Fully containerized environment using Docker
+* Modular ETL pipeline architecture
+* API-based data ingestion with batching
+* Fault-tolerant extraction with retry and exponential backoff
+* Data transformation using Polars
+* Columnar storage using Parquet
+* Data warehouse modeling (fact + dimension tables)
+* Idempotent pipeline design (safe re-runs)
+* Workflow orchestration using Airflow
+* Fully containerized using Docker
 
 ---
 
 # Setup Instructions
 
-### 1 Clone the repository
+### 1. Clone the repository
 
 ```
 git clone https://github.com/nak5hatra/crypto-market-data-pipeline.git
@@ -122,19 +129,18 @@ cd crypto-market-data-pipeline
 
 ---
 
-### 2 Create environment variables
+### 2. Create environment variables
 
-Create a `.env` file and configure:
+Create a `.env` file:
 
 ```
-POSTGRES_USER=your_user
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=crypto_db
+COINGECKO_API_KEY=your_api_key_here
+DB_URL=postgresql+psycopg2://user:password@localhost:5432/crypto_db
 ```
 
 ---
 
-### 3 Start the environment
+### 3. Start the environment
 
 ```
 docker compose up --build
@@ -150,49 +156,33 @@ This will start:
 
 # Running the Pipeline
 
-Once the containers are running:
-
 1. Open Airflow UI
 
 ```
 http://localhost:8080
 ```
 
-2. Enable the DAG:
+2. Enable the DAG
 
 ```
-crypto_pipeline_dag
+crypto_etl_pipeline
 ```
 
-3. Trigger the pipeline.
+3. Trigger the pipeline
 
 Airflow will execute the full ETL workflow.
 
 ---
 
-# Example Data Collected
+# Key Learnings
 
-The pipeline collects market metrics such as:
-
-* Coin ID
-* Symbol
-* Current Price
-* Market Cap
-* 24h Price Change
-* Trading Volume
-
----
-
-
-# Learning Outcomes
-
-This project demonstrates practical experience with:
-
-* Building modular ETL pipelines
-* API-based data ingestion
-* Data transformation at scale
-* Pipeline orchestration using Airflow
-* Containerized data engineering environments
+* Designed a scalable and modular ETL pipeline
+* Implemented star schema data modeling
+* Built idempotent pipelines to handle reprocessing
+* Handled API rate limits using retry and exponential backoff
+* Used Polars for high-performance data transformation
+* Orchestrated workflows using Airflow
+* Containerized data pipelines using Docker
 
 ---
 

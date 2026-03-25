@@ -1,65 +1,54 @@
-import sys
-import os
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-sys.path.append(PROJECT_ROOT)
-
-from src.extract import fetch_coin_data, fetch_market_data
-from src.transform import transform_data
-from src.load import load_data_to_database
-from src.config import Config
-
 from airflow import DAG
-from airflow.providers.standard.operators.python import PythonOperator
+from airflow.operators.python import PythonOperator
 import datetime
 import pendulum
 
+from src.extract import fetch_coin_data, fetch_market_data
+from src.transform import transform_data
+from src.load import load_dim_coin, load_fact_crypto
+
 default_args = {
     "owner": "data_engineering",
-    'depends_on_past': False,
-    'retries': 1,
-    'retry_delay': datetime.timedelta(minutes=1),
+    "depends_on_past": False,
+    "retries": 2,
+    "retry_delay": datetime.timedelta(minutes=2),
 }
 
-with DAG (
-    dag_id='Crypto_ETL_Pipeline',
-    tags=["crypto", "etl"],
-    default_args= default_args,
-    start_date= pendulum.datetime(2026, 3, 11,tz='UTC'),
-    description='A Crypto ETL Pipeline Using Airflow',
-    schedule='@hourly',
+with DAG(
+    dag_id="crypto_etl_pipeline",
+    default_args=default_args,
+    start_date=pendulum.datetime(2026, 3, 11, tz="UTC"),
+    schedule="@hourly",
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=30),
-    doc_md="""
-    ### Crypto ETL Pipeline
-
-    Pipeline extracts crypto market data from CoinGecko API,
-    transforms the data using Polars, and loads it into PostgreSQL.
-    """
+    tags=["crypto", "etl"],
 ) as dag:
-    
-    fetch_coin_task = PythonOperator(
-        task_id = "fetch_coin_data",
+
+    extract_coin = PythonOperator(
+        task_id="extract_coin_data",
         python_callable=fetch_coin_data,
-        
     )
-    
-    fetch_market_task = PythonOperator(
-        task_id = "fetch_market_data",
+
+    extract_market = PythonOperator(
+        task_id="extract_market_data",
         python_callable=fetch_market_data,
-        op_args=[fetch_coin_task.output],
     )
-    
-    
-    transform_data_task = PythonOperator(
-        task_id="transform_data_task",
+
+    transform = PythonOperator(
+        task_id="transform_data",
         python_callable=transform_data,
-        op_args=[fetch_market_task.output],
+        op_args=["/opt/airflow/data/raw/market_data.json"], 
     )
-    
-    load_data_to_database_task = PythonOperator(
-        task_id = "load_data_to_db",
-        python_callable=load_data_to_database,
-        op_args=[transform_data_task.output, Config.CRYPTO_TABLE],
+
+    load_dim = PythonOperator(
+        task_id="load_dim_coin",
+        python_callable=load_dim_coin,
+        op_args=["/opt/airflow/data/staging/dim_coin.parquet"],
     )
-    
-    fetch_coin_task >> fetch_market_task >>  transform_data_task >> load_data_to_database_task
+
+    load_fact = PythonOperator(
+        task_id="load_fact_crypto",
+        python_callable=load_fact_crypto,
+        op_args=["/opt/airflow/data/staging/fact_crypto_price.parquet"],
+    )
+
+    extract_coin >> extract_market >> transform >> [load_dim, load_fact]
