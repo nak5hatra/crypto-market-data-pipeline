@@ -45,31 +45,7 @@ This design improves query performance and supports analytical workloads.
 ---
 
 # Project Structure
-
-```
-crypto-market-data-pipeline
-│
-├── Airflow/
-│   └── dags/
-│       └── crypto_pipeline_dag.py
-│
-├── data/
-│   ├── raw/
-│   └── staging/
-│
-├── src/
-│   ├── config.py
-│   ├── extract.py
-│   ├── transform.py
-│   ├── load.py
-│   ├── pipeline.py
-│   └── utils.py
-│
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
+![alt text](https://github.com/nak5hatra/crypto-market-data-pipeline/blob/main/images/structure.png?raw=true)
 
 ---
 
